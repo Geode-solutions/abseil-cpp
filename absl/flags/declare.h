@@ -25,7 +25,7 @@
 #ifndef ABSL_FLAGS_DECLARE_H_
 #define ABSL_FLAGS_DECLARE_H_
 
-#include "absl/strings/string_view.h"
+#include "absl/base/config.h"
 
 namespace absl {
 ABSL_NAMESPACE_BEGIN

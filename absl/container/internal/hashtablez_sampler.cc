@@ -33,24 +33,20 @@ namespace container_internal {
 constexpr int HashtablezInfo::kMaxStackDepth;
 
 namespace {
-ABSL_CONST_INIT std::atomic<bool> g_hashtablez_enabled{
-    false
-};
+ABSL_CONST_INIT std::atomic<bool> g_hashtablez_enabled{false};
 ABSL_CONST_INIT std::atomic<int32_t> g_hashtablez_sample_parameter{1 << 10};
 ABSL_CONST_INIT std::atomic<int32_t> g_hashtablez_max_samples{1 << 20};
 
-#if ABSL_PER_THREAD_TLS == 1
+#if defined(ABSL_INTERNAL_HASHTABLEZ_SAMPLE)
 ABSL_PER_THREAD_TLS_KEYWORD absl::base_internal::ExponentialBiased
     g_exponential_biased_generator;
 #endif
 
 }  // namespace
-/*
-#if ABSL_PER_THREAD_TLS == 1
-ABSL_PER_THREAD_TLS_KEYWORD int64_t global_next_sample = 0;
-#endif  // ABSL_PER_THREAD_TLS == 1
-*/
 
+#if defined(ABSL_INTERNAL_HASHTABLEZ_SAMPLE)
+ABSL_PER_THREAD_TLS_KEYWORD int64_t global_next_sample = 0;
+#endif  // defined(ABSL_INTERNAL_HASHTABLEZ_SAMPLE)
 
 HashtablezSampler& HashtablezSampler::Global() {
   static auto* sampler = new HashtablezSampler();
@@ -170,13 +166,8 @@ int64_t HashtablezSampler::Iterate(
 }
 
 static bool ShouldForceSampling() {
-  enum ForceState {
-    kDontForce,
-    kForce,
-    kUninitialized
-  };
-  ABSL_CONST_INIT static std::atomic<ForceState> global_state{
-      kUninitialized};
+  enum ForceState { kDontForce, kForce, kUninitialized };
+  ABSL_CONST_INIT static std::atomic<ForceState> global_state{kUninitialized};
   ForceState state = global_state.load(std::memory_order_relaxed);
   if (ABSL_PREDICT_TRUE(state == kDontForce)) return false;
 
@@ -193,7 +184,7 @@ HashtablezInfo* SampleSlow(int64_t* next_sample) {
     return HashtablezSampler::Global().Register();
   }
 
-#if ABSL_PER_THREAD_TLS == 0
+#if !defined(ABSL_INTERNAL_HASHTABLEZ_SAMPLE)
   *next_sample = std::numeric_limits<int64_t>::max();
   return nullptr;
 #else
@@ -228,7 +219,7 @@ void RecordInsertSlow(HashtablezInfo* info, size_t hash,
   // SwissTables probe in groups of 16, so scale this to count items probes and
   // not offset from desired.
   size_t probe_length = distance_from_desired;
-#if SWISSTABLE_HAVE_SSE2
+#if ABSL_INTERNAL_RAW_HASH_SET_HAVE_SSE2
   probe_length /= 16;
 #else
   probe_length /= 8;

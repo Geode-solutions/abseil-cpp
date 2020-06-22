@@ -21,11 +21,12 @@
 
 #include <string>
 
-#include "absl/raw_logging_internal_export.h"
 #include "absl/base/attributes.h"
+#include "absl/base/config.h"
 #include "absl/base/internal/atomic_hook.h"
 #include "absl/base/log_severity.h"
 #include "absl/base/macros.h"
+#include "absl/base/optimization.h"
 #include "absl/base/port.h"
 
 // This is similar to LOG(severity) << format..., but
@@ -109,7 +110,7 @@ void RawLog(absl::LogSeverity severity, const char* file, int line,
 // In POSIX this means calling write(), which is async-signal safe and does
 // not malloc.  If the platform supports the SYS_write syscall, we invoke that
 // directly to side-step any libc interception.
-void SafeWriteToStderr(const char *s, size_t len);
+void SafeWriteToStderr(const char* s, size_t len);
 
 // compile-time function to get the "base" filename, that is, the part of
 // a filename after the last "/" or "\" path separator.  The search starts at
@@ -169,7 +170,8 @@ using InternalLogFunction = void (*)(absl::LogSeverity severity,
                                      const char* file, int line,
                                      const std::string& message);
 
-RAW_LOGGING_INTERNAL_EXPORT extern base_internal::AtomicHook<InternalLogFunction>
+ABSL_DLL ABSL_INTERNAL_ATOMIC_HOOK_ATTRIBUTES extern base_internal::AtomicHook<
+    InternalLogFunction>
     internal_log_function;
 
 void RegisterInternalLogFunction(InternalLogFunction func);

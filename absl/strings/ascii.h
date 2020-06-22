@@ -55,8 +55,8 @@
 #include <algorithm>
 #include <string>
 
-#include "absl/strings_export.h"
 #include "absl/base/attributes.h"
+#include "absl/base/config.h"
 #include "absl/strings/string_view.h"
 
 namespace absl {
@@ -64,13 +64,13 @@ ABSL_NAMESPACE_BEGIN
 namespace ascii_internal {
 
 // Declaration for an array of bitfields holding character information.
-STRINGS_EXPORT extern const unsigned char kPropertyBits[256];
+ABSL_DLL extern const unsigned char kPropertyBits[256];
 
 // Declaration for the array of characters to upper-case characters.
-extern const char kToUpper[256];
+ABSL_DLL extern const char kToUpper[256];
 
 // Declaration for the array of characters to lower-case characters.
-extern const char kToLower[256];
+ABSL_DLL extern const char kToLower[256];
 
 }  // namespace ascii_internal
 
